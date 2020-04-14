@@ -11,26 +11,12 @@ from numpy import (sin, cos, pi)
 import numpy as np
 from PyDSTool.Toolbox import phaseplane as pp
 import matplotlib.pyplot as plt
+from bmk import Bmk
 
-icdict = {'x': 0, 'y': 0} # initial conditions
-pardict = {'sx': 0, 'sy': 1} # parameters
 
-# ODE rhs
-x_rhs = 'sx-cos(2*pi*y)-0.1*cos(2*pi*x)'
-y_rhs = 'sy-sin(2*pi*y)-0.1*sin(2*pi*x)'
-
-#defining ODE
-vardict = {'x': x_rhs, 'y': y_rhs}
-
-DSargs = PyDSTool.common.args()
-DSargs.name = 'BMK'
-DSargs.ics = icdict
-DSargs.pars = pardict
-DSargs.tdata = [0,25]
-DSargs.varspecs = vardict
-DSargs.xdomain = {'x': [0,1], 'y': [0,1]}
-
-ode = PyDSTool.Generator.Vode_ODEsystem(DSargs)
+pardict = {'ox': 0, 'oy': 1} # parameters
+bmk = Bmk(pardict)
+ode = bmk.ode
 
 ##############################################################################
 
@@ -41,23 +27,65 @@ class RhcCont(PyDSTool.ContClass):
 class Ode(object):
     
     def __init__(self, ode):
+        """
+        Saves ODE as self.ode
+        Sets fixed points as self fixed_points
+        Verifies if the parameters are in the resonance region
+
+        Parameters
+        ----------
+        ode : PyDSTool.Generator.Vode_ODEsystem.Vode_ODEsystem
+            DESCRIPTION. BMK type ODE
+
+        Returns
+        -------
+        None.
+
+        """
         self.ode = ode
-        self.fixed_points = pp.find_fixedpoints(self.ode, n=4, eps=1e-5)
+        self.fixed_points = pp.find_fixedpoints(self.ode, n=10, eps=1e-2)
         self.in_resonance_region = True
         if len(self.fixed_points) != 2:
             print("Not in resonance region")
             self.in_resonance_region = False
     
     def _point_dict_setter(self,x,y):
+        """
+        Takes a cartesian point and sets it to a point dictionary
+
+        Parameters
+        ----------
+        x : float
+            DESCRIPTION. x coordinate
+        y : float
+            DESCRIPTION. y coordinate
+
+        Returns
+        -------
+        dict
+
+        """
         return {'x':x, 'y':y}
     
     def _point_dict_getter(self,point_dict):
+        """
+        Converts point dictionary to a list
+
+        Parameters
+        ----------
+        point_dict : dict
+
+        Returns
+        -------
+        list
+
+        """
         return [point_dict['x'], point_dict['y']]
     
     def get_fixed_points(self):
         return self.fixed_points
     
-    def fp_eigen(self, fp_coord, fuzz_factor = 1e-5):
+    def fp_eigen(self, fp_coord, fuzz_factor = 1e-12):
         """
         Returns information about the fixed point:
             - Stability type
@@ -152,20 +180,22 @@ class Ode(object):
                                              self.fp_eigen(fp)[1][1])
                         return self.saddle_point
    
-    def _initialise_unstable_manifold(self, perturbation = 1e-5):
+    def _initialise_unstable_manifold(self, perturbation = 1e-9):
         """
-        
+        Sets a point dictionary that is perturbed along the unstable eigenvector.
+        This is a linear approximation of the unstable manifold and 
+        is then used as the ic of the trajectory to compute W^-
 
         Parameters
         ----------
         perturbation : float, optional
             DESCRIPTION. The default is 1e-5. Perturbation in the unstable 
-            manifold direction to then make it iterable
+            manifold direction to then make it iterable.
 
         Returns
         -------
         saddle_coord : dict
-            DESCRIPTION. Point dictionary that is now iterable via RK4 to form W-
+            DESCRIPTION. Point dictionary near saddle point.
 
         """
         unstable_eval_index = [i for i, mu in enumerate(self.get_saddle_point()[1]) if mu>0]                              
@@ -178,16 +208,22 @@ class Ode(object):
         return saddle_coord
             
     def _lift(self, fp):
-        
         """
         Takes point dictionary and returns the lift of it in the cartesian space
         [1,2]x[0,1]
 
+        Parameters
+        ----------
+        fp : dict
+            DESCRIPTION. Point dict 
+
         Returns
         -------
         lift : dict
+            DESCRIPTION. Point dict
 
         """
+
         lift = {'x': fp['x']+1,
                 'y': fp['y']}
         return lift
@@ -213,40 +249,31 @@ class Ode(object):
         return norm
     
     def evaluate(self, x,y):
-        point_dict = self._point_dict_setter(x,y)
-        return self.ode.Rhs(0, point_dict)
-    
-    def _RK4_iter(self, point_dict, h=1e-0):
         """
-        Creates the next iterate of Runge-Kutta 4 method. 
-        Since BKM is autonomous, it is independent of time.
+        Evaluates the ODE as a vector field.
 
         Parameters
         ----------
-        point_dict : dict
-            Point dictionary
-        h : TYPE float, optional
-            The default is 1e-5. h value in RK4 algorithm
+        x : float
+
+        y : float
 
         Returns
         -------
-        list
-            Next iterate of RK4. 
+        array
 
         """
+        point_dict = self._point_dict_setter(x,y)
+        return self.ode.Rhs(0, point_dict)
+
+    def _euler_iter(self, point_dict, h=1e-5):
+        
         (x,y) = self._point_dict_getter(point_dict)
         
-        (k1, l1) = self.evaluate(x,y) 
+        (x_dot, y_dot) = self.evaluate(x,y)
         
-        (k2, l2) = self.evaluate(x+0.5*k1, y+0.5*l1)
+        return self._point_dict_setter(x+float(h)*x_dot, y+float(h)*y_dot)
         
-        (k3, l3) = self.evaluate(x+0.5*k2, y+0.5*l2)
-        
-        (k4, l4) = self.evaluate(x+k3, y+l3)
-        
-        return self._point_dict_setter(x+(float(h)/6)*(k1+2*k2+2*k3+k4),
-                y+(float(h)/6)*(l1+2*l2+2*l3+l4))
-
     def unstable_manifold(self):
         
         saddle = self.get_saddle_point()
@@ -254,16 +281,16 @@ class Ode(object):
         x1 = self._lift(saddle[0])
         p0 = self._initialise_unstable_manifold()
         P = [p0]
-        pn = self._RK4_iter(p0)
-        P.append(pn)
+        p1 = self._euler_iter(p0)
+        P.append(p1)
         i = 0
-        while (self._dist(P[-1],x1) < self._dist(P[-2],x1)):
-            P.append(self._RK4_iter(P[-1], h=0.01))
-            i+=1
+        while (self._dist(P[-1],x1) < self._dist(P[-2],x1)) or i < 1000:
+            P.append(self._euler_iter(P[-1], h=1e-3))
+            i += 1
         
         return P, x1
     def plot(self, dict_list):
-        x_plt = []
+        x_plt = [] 
         y_plt = []
         for i in range(len(dict_list)):
             (x,y) = self._point_dict_getter(dict_list[i])
@@ -274,25 +301,35 @@ class Ode(object):
         plt.show()
     def homoclinic_dist(self):
         P, x = self.unstable_manifold()
-        return self._dist(P[0], x)
+        return self._dist(P[-1], x)
+
+dist = []
+oy_list = []
+
+for oy in np.arange(0.901, 1.099, 0.001):
+    bmk = Bmk({'ox':0, 'oy':oy})
+    ode = Ode(bmk.ode)
+    print(oy)
+    if ode.in_resonance_region:
+        dist.append(ode.homoclinic_dist())
+        oy_list.append(oy)
+
+plt.plot(oy_list, dist)
+plt.title('Pontryagin Energy for ox = 0')
+plt.xlabel('oy')
+plt.ylabel('Pontryagin Energy')
+plt.xlim=(0.9,1.1)
+plt.ylim=(0,1)
+
+plt.show()
+
 """
 Next things to be done:
-    
-    2) apply some grad descent in sy-param space and repeat (1), (2) 
-     <finds rhc point for specific sx
-
-    3) find a way to raise error if self.in_resonance_region = False
+    1) Improve stopping point for unstable manifold computation. Ideas include
+                        +->continue until manifold is no longer a function
+                        +->force the iteration for longer
+    2) apply some grad descent in oy-param space and repeat (1), (2) 
+     <finds rhc point for specific ox
+    3) To compute other RHC: run unstable manifold but iterate from the lift 
+        of the saddle in the negative perturbed direction
 """
-bmk = Ode(ode)
-
-
-
-
-
-
-
-
-
-
-
-

@@ -11,11 +11,11 @@ from PyDSTool.Toolbox import phaseplane as pp
 
 
 icdict = {'x': 0, 'y': 0} # initial conditions
-pardict = {'sx': -2, 'sy': 0} # parameters
+pardict = {'ox': -2, 'oy': 0} # parameters
 
 # ODE rhs
-x_rhs = 'sx-cos(2*pi*y)-0.1*cos(2*pi*x)'
-y_rhs = 'sy-sin(2*pi*y)-0.1*sin(2*pi*x)'
+x_rhs = 'ox-cos(2*pi*y)-0.1*cos(2*pi*x)'
+y_rhs = 'oy-sin(2*pi*y)-0.1*sin(2*pi*x)'
 
 #defining ODE
 vardict = {'x': x_rhs, 'y': y_rhs}
@@ -29,7 +29,29 @@ DSargs.varspecs = vardict
 
 ode = PyDSTool.Generator.Vode_ODEsystem(DSargs)
 
-
+class Bmk(object):
+    def __init__(self, pardict):
+        icdict = {'x': 0, 'y': 0} # initial conditions
+        
+        # ODE rhs
+        x_rhs = 'ox-cos(2*pi*y)-0.1*cos(2*pi*x)'
+        y_rhs = 'oy-sin(2*pi*y)-0.1*sin(2*pi*x)'
+        
+        #defining ODE
+        vardict = {'x': x_rhs, 'y': y_rhs}
+        DSargs = PyDSTool.common.args()
+        DSargs.name = 'BMK'
+        DSargs.ics = icdict
+        DSargs.pars = pardict
+        DSargs.tdata = [0,25]
+        DSargs.xdomain = {'x': [0, 1], 'y': [0, 1]}
+        DSargs.varspecs = vardict
+        
+        self.ode = PyDSTool.Generator.Vode_ODEsystem(DSargs)
+        
+    def get_ode(self):
+        return self.ode
+        
 
 class RHCContClass(PyDSTool.ContClass):
         
@@ -45,7 +67,7 @@ PC = PyDSTool.ContClass(ode)
 ##########################################################
 def inner_outer_init(PC):
     PCargs = PyDSTool.args(name='EQ1', type='EP-C')
-    PCargs.freepars     = ['sx']
+    PCargs.freepars     = ['ox']
     PCargs.MaxNumPoints = 120        
     PCargs.MaxStepSize  = 0.01
     PCargs.MinStepSize  = 0.001
@@ -63,7 +85,7 @@ def inner_outer_init(PC):
 def inner_sne(PC):
     PCargs = PyDSTool.args(name='SNE1', type='LP-C')
     PCargs.initpoint = 'EQ1:LP1'
-    PCargs.freepars  = ['sx', 'sy']
+    PCargs.freepars  = ['ox', 'oy']
     PCargs.MaxStepSize = 0.1
     PCargs.LocBifPoints = ['BT']
     PCargs.MaxNumPoints = 80
@@ -78,7 +100,7 @@ def inner_sne(PC):
 def outer_sne(PC):
     PCargs = PyDSTool.args(name='SNE2', type='LP-C')
     PCargs.initpoint = 'EQ1:LP2'
-    PCargs.freepars  = ['sx', 'sy']
+    PCargs.freepars  = ['ox', 'oy']
     PCargs.MaxStepSize = 0.1
     PCargs.LocBifPoints = ['BT']
     PCargs.MaxNumPoints = 80
@@ -93,7 +115,7 @@ def outer_sne(PC):
 def trace_zero_upper(PC):
     PCargs = PyDSTool.args(name='NS1', type='H-C2')
     PCargs.initpoint = 'SNE1:BT1'
-    PCargs.freepars  = ['sx', 'sy']
+    PCargs.freepars  = ['ox', 'oy']
     PCargs.MaxStepSize = 0.2
     PCargs.LocBifPoints = ['BT']
     PCargs.MaxNumPoints = 100
@@ -108,7 +130,7 @@ def trace_zero_upper(PC):
 def trace_zero_lower(PC):
     PCargs = PyDSTool.args(name='NS2', type='H-C2')
     PCargs.initpoint = 'SNE1:BT2'
-    PCargs.freepars  = ['sx', 'sy']
+    PCargs.freepars  = ['ox', 'oy']
     PCargs.MaxStepSize = 0.2
     PCargs.LocBifPoints = ['BT']
     PCargs.MaxNumPoints = 100
@@ -127,4 +149,4 @@ outer_sne(PC)
 trace_zero_lower(PC)
 trace_zero_upper(PC)
 """
-#PC.display(['sx','sy'])
+#PC.display(['ox','oy'])
