@@ -43,7 +43,7 @@ class Ode(object):
 
         """
         self.ode = ode
-        self.fixed_points = pp.find_fixedpoints(self.ode, n=10, eps=1e-2)
+        self.fixed_points = pp.find_fixedpoints(self.ode, n=10, eps=1e-5)
         self.in_resonance_region = True
         if len(self.fixed_points) != 2:
             print("Not in resonance region")
@@ -97,7 +97,7 @@ class Ode(object):
             Dictionary {'x': x-coordinate of fixed point,
                         'y': y-coordinate of fixed point.
         fuzz_factor : float, optional
-            Tolerance to zero. The default is 1e-5.
+            Tolerance to zero. The default is 1e-12.
 
         Returns
         -------
@@ -180,7 +180,7 @@ class Ode(object):
                                              self.fp_eigen(fp)[1][1])
                         return self.saddle_point
    
-    def _initialise_unstable_manifold(self, perturbation = 1e-9):
+    def _initialise_unstable_manifold(self, perturbation = 1e-7):
         """
         Sets a point dictionary that is perturbed along the unstable eigenvector.
         This is a linear approximation of the unstable manifold and 
@@ -202,8 +202,12 @@ class Ode(object):
         unstable_evec = [self.saddle_point[2][0][unstable_eval_index],\
                          self.saddle_point[2][1][unstable_eval_index]]
         saddle_coord = self.saddle_point[0]
-        saddle_coord['x'] += float(perturbation*unstable_evec[0])
-        saddle_coord['y'] += float(perturbation*unstable_evec[1])
+        if unstable_evec[0]>0:
+            saddle_coord['x'] += float(perturbation*unstable_evec[0])
+            saddle_coord['y'] += float(perturbation*unstable_evec[1])
+        else:
+            saddle_coord['x'] -= float(perturbation*unstable_evec[0])
+            saddle_coord['y'] -= float(perturbation*unstable_evec[1])
         
         return saddle_coord
             
@@ -245,7 +249,7 @@ class Ode(object):
             L2 norm of x, y.
 
         """
-        norm = (x['x']-y['x'])**2+(x['y']-y['y'])**2
+        norm = np.abs(x['x']-y['x'])**2+np.abs(x['y']-y['y'])**2
         return norm
     
     def evaluate(self, x,y):
@@ -266,7 +270,7 @@ class Ode(object):
         point_dict = self._point_dict_setter(x,y)
         return self.ode.Rhs(0, point_dict)
 
-    def _euler_iter(self, point_dict, h=1e-5):
+    def _euler_iter(self, point_dict, h=1e-6): ##
         
         (x,y) = self._point_dict_getter(point_dict)
         
@@ -279,12 +283,12 @@ class Ode(object):
         saddle = self.get_saddle_point()
         
         x1 = self._lift(saddle[0])
-        p0 = self._initialise_unstable_manifold()
+        p0 = self._initialise_unstable_manifold(1e-3) ##
         P = [p0]
         p1 = self._euler_iter(p0)
         P.append(p1)
         i = 0
-        while (self._dist(P[-1],x1) < self._dist(P[-2],x1)) or i < 1000:
+        while (self._dist(P[-1],x1) < self._dist(P[-2],x1)) or i < 500:
             P.append(self._euler_iter(P[-1], h=1e-3))
             i += 1
         
