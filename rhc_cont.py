@@ -13,16 +13,52 @@ from PyDSTool.Toolbox import phaseplane as pp
 import matplotlib.pyplot as plt
 from bmk import Bmk
 
-
-pardict = {'ox': 0, 'oy': 1} # parameters
-bmk = Bmk(pardict)
-ode = bmk.ode
-
 ##############################################################################
 
-class RhcCont(PyDSTool.ContClass):
-    def forward():
-        pass
+class RhcCont(object):
+    
+    
+    def learning(self, ox, oy_seed):
+        oy = oy_seed 
+        learning_rate = 1e-4
+        estimates = [oy_seed]
+        oy -= learning_rate*self.grad_PE(ox, oy)
+        estimates.append(oy)
+        while np.abs(estimates[-1]-estimates[-2])>1e-4:
+            oy -= learning_rate*self.grad_PE(ox, oy)
+            estimates.append(oy)
+        return estimates[-1]
+    
+    def grad_PE(self, ox, oy, step = 0.01):
+        bmk = Bmk({'ox':ox, 'oy':oy})
+        ode = Ode(bmk.ode)
+        
+        PE = ode.homoclinic_dist()
+        
+        
+        bmk_incr = Bmk({'ox':ox, 'oy':oy+step})
+        ode_incr = Ode(bmk_incr.ode)
+        
+        PE_incr = ode_incr.homoclinic_dist()
+        return (PE_incr-PE)/step
+    def seed(self):
+        return self.learning(0, 0.91)
+
+    def propagate_forwards(self):
+        rhc_oy = [self.seed()]
+        rhc_ox = [0]
+        self.seed = rhc_oy[0]
+        ox_step = 0.05
+        for i in range(10):
+            print(i)
+            ox_seed = rhc_ox[-1]+ox_step
+            oy_seed = rhc_oy[-1]
+            try:
+                rhc_ox.append(ox_seed)
+                rhc_oy.append(self.learning(ox_seed, oy_seed))
+            except:
+                print("done goofed")
+        return rhc_ox, rhc_oy
 
 class Ode(object):
     
@@ -306,12 +342,14 @@ class Ode(object):
     def homoclinic_dist(self):
         P, x = self.unstable_manifold()
         return self._dist(P[-1], x)
+    
+
 
 dist = []
 oy_list = []
 
-for oy in np.arange(0.901, 1.099, 0.001):
-    bmk = Bmk({'ox':0, 'oy':oy})
+for oy in np.arange(0.9,1, 0.001):
+    bmk = Bmk({'ox':0.5, 'oy':oy})
     ode = Ode(bmk.ode)
     print(oy)
     if ode.in_resonance_region:
@@ -319,21 +357,17 @@ for oy in np.arange(0.901, 1.099, 0.001):
         oy_list.append(oy)
 
 plt.plot(oy_list, dist)
-plt.title('Pontryagin Energy for ox = 0')
+plt.title('Pontryagin Energy for ox = 0.5')
 plt.xlabel('oy')
 plt.ylabel('Pontryagin Energy')
-plt.xlim=(0.9,1.1)
+plt.xlim=(0.9,1)
 plt.ylim=(0,1)
 
 plt.show()
 
 """
 Next things to be done:
-    1) Improve stopping point for unstable manifold computation. Ideas include
-                        +->continue until manifold is no longer a function
-                        +->force the iteration for longer
-    2) apply some grad descent in oy-param space and repeat (1), (2) 
-     <finds rhc point for specific ox
+
     3) To compute other RHC: run unstable manifold but iterate from the lift 
         of the saddle in the negative perturbed direction
 """
