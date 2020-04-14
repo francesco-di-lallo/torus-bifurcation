@@ -2,15 +2,15 @@
 
 ## Scope:
 Creating the bifurcation diagram for the family of ODEs described in part 2 of Simplest Bifurcation Diagrams of Monotone Vector Fields on a Torus (C Baesens and R S MacKay, 2018). From here on, they will be called BMK equations.
-This project plots the SNE curves (equivalently the boundaries of the resonance region), trace zero loops as continuation from bogdanov-takens points as well as curves of RHC+/-.
+This project plots the SNE curves (equivalently the boundaries of the resonance region), trace zero loops as continuation from bogdanov-takens points as well as curves of RHC+/- that intersect forming the Necklace point. Ultimately, the aim is to tune the equation to form modified BMK equations and move the Necklace point inside the tr0 loop.
 
 ## Current status
 SNE and Tr0 are plotted using PyDSTool's PyCont class. 
-The Ode class can find the saddle point and approximate the unstable manifold. This is computed up until it starts moving away from the lift of the saddle point and the distance to the lift point is computed.
+The Ode class can find the saddle point and approximate the unstable manifold. This is computed up until it starts moving away from the (1,0)-lift of the saddle point and the distance to the lift point is computed (this distance is called the Pontryagin Energy of the system). Then we iterate oy with fixed ox and compute the minimum distance of the positive branch of the unstable manifold to the (1,0)-lift. This graph comes out quite noisy, it takes the value of the Pontryagin energy or 1 with seemingly random choice.
 
 ## Progression
-The next step is to vary the parameters of the BMK class and recomputing the distance until a point with heteroclinic connection is found. This implies that under the torus mapping there is a rotational homoclinic connection. Then continuing the curve to form either RHC+ or RHC-. The finding a point on the other curve and continuing that to find the N point.
-Ultimately, we will modify the BMK equation to move the N point inside the Tr0 loop.
+Next steps include finding an efficient method of finding argmin(pontryagin energy) with noise or reducing the noise and applying a method such as the Newton-Raphson method. Then continuing the curve to form RHC+. 
+Repeating this whole process but initialising from the negative branch unstable manifold of the (1,0)-lift of the saddle point will generate the RHC- curve.
 
 ## Technical Details
 ### `bmk.py` 
