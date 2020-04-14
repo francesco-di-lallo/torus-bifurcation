@@ -162,4 +162,6 @@ evaluate(x,y)
         -------
         array
 ## TODO
-- Make a class that initiates a BMK with given parameters.
+- Find fast method of computing minimum of pontryagin energy with fixed ox. An idea is to choose k points \{X\_i\} iid uniformly on oy|ox. Then discount the Xi's that are near one and use these as seeds of some sort.
+- Use the RHC point for fixed ox to then approximate the RHC for fixed ox+epsilon
+- Propagate the unstable manifold of the (1,0)-lift of the saddle backwards that coincides with the forward branch of the stable manifold the saddle point at a RHC point. This generates the RHC- curve.
