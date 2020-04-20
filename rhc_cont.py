@@ -41,6 +41,7 @@ class RhcCont(object):
         
         PE_incr = ode_incr.homoclinic_dist()
         return (PE_incr-PE)/step
+    
     def seed(self):
         return self.learning(0, 0.91)
 
@@ -54,12 +55,34 @@ class RhcCont(object):
             ox_seed = rhc_ox[-1]+ox_step
             oy_seed = rhc_oy[-1]
             try:
-                rhc_ox.append(ox_seed)
                 rhc_oy.append(self.learning(ox_seed, oy_seed))
+                rhc_ox.append(ox_seed)
             except:
                 print("done goofed")
         return rhc_ox, rhc_oy
-
+    
+    def propagate(self):
+        rhc_oy_fwd = [self.seed()]
+        rhc_ox_fwd = [0]
+        rhc_ox_bkd = [0]
+        rhc_oy_bkd = rhc_oy_fwd
+        self.seed = rhc_oy_fwd[0]
+        ox_step = 0.05
+        for i in range(10):
+            print(i)
+            ox_seed_fwd = rhc_ox_fwd[-1]+ox_step
+            ox_seed_bkd = rhc_ox_bkd[-1]-ox_step
+            oy_seed_fwd = rhc_oy_fwd[-1]
+            oy_seed_bkd = rhc_oy_bkd[-1]
+            try:
+                rhc_oy_fwd.append(self.learning(ox_seed_fwd, oy_seed_fwd))
+                rhc_ox_fwd.append(ox_seed_fwd)
+                rhc_oy_bkd.append(self.learning(ox_seed_bkd, oy_seed_bkd))
+                rhc_ox_bkd.append(ox_seed_bkd)
+            except:
+                print("done goofed")
+        return rhc_ox_fwd, rhc_oy_fwd, rhc_ox_bkd, rhc_oy_bkd
+    
 class Ode(object):
     
     def __init__(self, ode):
@@ -348,8 +371,8 @@ class Ode(object):
 dist = []
 oy_list = []
 
-for oy in np.arange(0.9,1, 0.001):
-    bmk = Bmk({'ox':0.5, 'oy':oy})
+for oy in np.arange(0.89,1.09, 0.001):
+    bmk = Bmk({'ox':-0.1, 'oy':oy})
     ode = Ode(bmk.ode)
     print(oy)
     if ode.in_resonance_region:
