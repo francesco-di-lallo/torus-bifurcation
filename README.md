@@ -12,8 +12,6 @@ This value is then used as the starting seed to compute the minima for an increm
 ## Progression
 Repeating this whole process but initialising from the negative branch unstable manifold of the (1,0)-lift of the saddle point will generate the RHC- curve.
 
-## Implementation
-
 ## TODO
 - Correct gradient descent algorithm since PE curve is not differentiable at minimum --> idea is to use oy_n+1 = oy_n - h/PE'
 - Propagate the unstable manifold of the (1,0)-lift of the saddle backwards that coincides with the forward branch of the stable manifold the saddle point at a RHC point. This generates the RHC- curve.
