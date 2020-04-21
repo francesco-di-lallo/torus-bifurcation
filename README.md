@@ -13,5 +13,6 @@ This value is then used as the starting seed to compute the minima for an increm
 Repeating this whole process but initialising from the negative branch unstable manifold of the (1,0)-lift of the saddle point will generate the RHC- curve.
 
 ## TODO
+- Look into applying Householder's method to minimise PE. I suspect that it will be ulitmately slower since computing nth derivative will be expensive
 - Ensure that the RhcCont.propagate() method works appropriately
 - Propagate the unstable manifold of the (1,0)-lift of the saddle backwards that coincides with the forward branch of the stable manifold the saddle point at a RHC point. This generates the RHC- curve.
