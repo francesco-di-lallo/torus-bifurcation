@@ -6,13 +6,13 @@ This project plots the SNE curves (equivalently the boundaries of the resonance 
 
 ## Current status
 SNE and Tr0 are plotted using PyDSTool's PyCont class. 
-The Ode class can find the saddle point and approximate the unstable manifold. This is computed up until it starts moving away from the (1,0)-lift of the saddle point and the distance to the lift point is computed (this distance is called the Pontryagin Energy of the system). Then apply Newton-Raphson method to find the zero (i.e. the heteroclinic connection in the plane). The argmin is a point on the RHC curve. 
+The Ode class can find the saddle point and approximate the unstable manifold. This is computed up until it starts moving away from the (1,0)-lift of the saddle point and the distance to the lift point is computed (this distance is called the Pontryagin Energy of the system). Then apply Newton-Raphson method to find the zero (i.e. the heteroclinic connection in the plane). The argmin is a point on the RHC+ curve. 
 This value is then used as the starting seed to compute the minima for an increment in ox.
+The whole process is repeated from the negative branch of the unstable manifold to the (1,0)-lift of the saddle to generate RHC-.
 
 ## Progression
-Repeating this whole process but initialising from the negative branch unstable manifold of the (1,0)-lift of the saddle point will generate the RHC- curve.
+
 
 ## TODO
-- Look into applying Householder's method to minimise PE. I suspect that it will be ulitmately slower since computing nth derivative will be expensive
-- Ensure that the RhcCont.propagate() method works appropriately
-- Propagate the unstable manifold of the (1,0)-lift of the saddle backwards that coincides with the forward branch of the stable manifold the saddle point at a RHC point. This generates the RHC- curve.
+- Find fast way to compute N point directly
+- Verify that N point is in tr0 loop
