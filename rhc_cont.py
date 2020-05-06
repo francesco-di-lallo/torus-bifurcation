@@ -11,10 +11,33 @@ import pickle
 
 class RhcCont(object):
     def __init__(self):
+        """
+        Instantiate RHC continuation class
+
+        """
         print("Computing RHC Curve")
         
     
     def learning(self, ox, oy_seed, direction):
+        """
+        Learns the zero of PE for a given ox parameter for a given branch
+
+        Parameters
+        ----------
+        ox : float
+            DESCRIPTION. Fixed ox parameter 
+        oy_seed : float
+            DESCRIPTION. Seed for NR method
+        direction : +/- 1
+            DESCRIPTION. +1 for positive branch of unstable manifold. 
+            -1 for negative
+
+        Returns
+        -------
+        estimate : float
+            DESCRIPTION. Estimate of the RHC point given ox. To within 1e-5.
+
+        """
         oy = oy_seed 
         learning_rate = 1e-1
         estimates = [oy_seed]
@@ -29,6 +52,27 @@ class RhcCont(object):
         return estimates[-1]
     
     def newton_raphson(self, ox, oy, direction, step = 1e-5):
+        """
+        Computes an iterate of NR
+
+        Parameters
+        ----------
+        ox : float
+            DESCRIPTION. 
+        oy : float
+            DESCRIPTION.
+        direction : +/- 1
+            DESCRIPTION. 1 for positive branch of unstable manifold. 
+            -1 for negative
+        step : TYPE, optional
+            DESCRIPTION. The default is 1e-5.
+
+        Returns
+        -------
+        PE/PE' : float
+            DESCRIPTION. Error iterate
+
+        """
         bmk = Bmk({'ox':ox, 'oy':oy})
         ode = Ode(bmk.ode)
         
@@ -42,10 +86,42 @@ class RhcCont(object):
         return PE/((PE_incr-PE)/step)
     
     def seed(self, direction):
+        """
+        Computes the seed of a given direction with seed (0,1)
+
+        Parameters
+        ----------
+        direction : +/- 1
+            DESCRIPTION. 1 for positive branch of unstable manifold. 
+            -1 for negative
+
+        Returns
+        -------
+        oy seed : oy value for ox = 0 on the given branch of RHC.
+            DESCRIPTION.
+
+        """
         return self.learning(0, 1, direction)
     
     
     def propagate(self, direction):
+        """
+        Propagates the initial seed of RHC on a given branch
+
+        Parameters
+        ----------
+        direction : +/- 1
+            DESCRIPTION. 1 for positive branch of unstable manifold. 
+            -1 for negative
+
+        Returns
+        -------
+        rhc_ox : list
+            DESCRIPTION. ox values of RHC curve
+        rhc_oy : list
+            DESCRIPTION. oy values of RHC curve
+
+        """
         """
         if direction == 1:
             rhc_oy = pickle.load(open('rhc_oy_05.p', 'rb'))
