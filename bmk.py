@@ -8,7 +8,14 @@ import PyDSTool
 
 class Bmk(object):
     def __init__(self, pardict):
-        
+        """
+        Instantiate a bmk type equation to pass into an Ode class
+
+        Parameters
+        ----------
+        pardict : dictionary
+            DESCRIPTION. Parameter dictionary {'ox': ox, 'oy': oy}
+        """
         icdict = {'x': 0, 'y': 0} # initial conditions
         
         # ODE rhs
@@ -28,4 +35,7 @@ class Bmk(object):
         self.ode = PyDSTool.Generator.Vode_ODEsystem(DSargs)
         
     def get_ode(self):
+        """
+        Getter method for Bmk.ode
+        """
         return self.ode
