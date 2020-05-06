@@ -33,7 +33,6 @@ class Ode(object):
         if len(self.fixed_points) != 2:
             print("Not in resonance region")
             self.in_resonance_region = False
-            
     
     def _point_dict_setter(self,x,y):
         """
