@@ -2,7 +2,7 @@
 
 ## Scope:
 Creating the bifurcation diagram for the family of ODEs described in part 2 of Simplest Bifurcation Diagrams of Monotone Vector Fields on a Torus (C Baesens and R S MacKay, 2018). From here on, they will be called BMK equations.
-This project plots the SNE curves (equivalently the boundaries of the resonance region), trace zero loops as continuation from bogdanov-takens points as well as curves of RHC+/- that intersect forming the Necklace point. Ultimately, the aim is to tune the equation to form modified BMK equations and move the Necklace point inside the tr0 loop.
+This project plots the SNE curves (equivalently the boundaries of the resonance region), trace zero loops (as continuation from bogdanov-takens points) as well as curves of RHC+/- that intersect forming the Necklace point. Ultimately, the aim is to tune the equation to form modified BMK equations and move the Necklace point inside the tr0 loop.
 
 ## Current status
 SNE and Tr0 are plotted using PyDSTool's PyCont class. 
