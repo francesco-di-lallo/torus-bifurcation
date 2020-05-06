@@ -10,9 +10,10 @@ The Ode class can find the saddle point and approximate the unstable manifold. T
 This value is then used as the starting seed to compute the minima for an increment in ox.
 The whole process is repeated from the negative branch of the unstable manifold to the (1,0)-lift of the saddle to generate RHC-.
 
-## Progression
+Applying the appropriate symmetry x -> -x and y -> -y generates the RHC curves for the lower necklace point.
+
+The N point can be computed directly by using a multivariate Newton Raphson method with a learning rate eta = 0.1. The NR method is applied to the function (ox, oy) --> (PE+, PE-). Where PE+(-) is the Pontryagin Energy for the positive (negative) branch of the unstable manifold to the ((1,0)-lift of the) saddle.
 
 
 ## TODO
-- Find fast way to compute N point directly
-- Verify that N point is in tr0 loop
+
