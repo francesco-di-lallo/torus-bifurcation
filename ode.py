@@ -68,6 +68,10 @@ class Ode(object):
         return [point_dict['x'], point_dict['y']]
     
     def get_fixed_points(self):
+        """
+        Gets fixed points as point dictionary
+
+        """
         return self.fixed_points
     
     def fp_eigen(self, fp_coord, fuzz_factor = 1e-12):
@@ -79,21 +83,21 @@ class Ode(object):
         Parameters
         ----------
         fp_coord : dict
-            Dictionary {'x': x-coordinate of fixed point,
+           DESCRIPTION.  Dictionary {'x': x-coordinate of fixed point,
                         'y': y-coordinate of fixed point.
         fuzz_factor : float, optional
-            Tolerance to zero. The default is 1e-12.
+            DESCRIPTION. Tolerance to zero. The default is 1e-12.
 
         Returns
         -------
         fp_type : str
-            Description of type of fixed point:
+           DESCRIPTION.  Description of type of fixed point:
                 - saddle point
                 - hyperbolic attractor
                 - hyperbolic repeller
                 - non-hyperbolic
         eigen_vectors : array
-            First entry contains eigenvalues
+           DESCRIPTION.  First entry contains eigenvalues
             Second entry contains eigenvectors (v1|v2)
 
         """
@@ -129,12 +133,12 @@ class Ode(object):
         Parameters
         ----------
         fp : dict
-            Dictionary of a point
+           DESCRIPTION.  Dictionary of a point
 
         Returns
         -------
         j : 2x2 array
-            Computed jacobian at the given point.
+           DESCRIPTION.  Computed jacobian at the given point.
             Note that the jacobian is independent of the parameter
             so all BMK ODEs have the same jacobian
 
@@ -152,7 +156,7 @@ class Ode(object):
         Returns 
         -------
         tuple
-            First entry is a dictionary of the coordinates of the saddle point
+            DESCRIPTION. First entry is a dictionary of the coordinates of the saddle point
             Second entry is a 2x1 array of the eigenvalues [lambda_1, lambda_2]
             Third entry is a 2x2 array of the eigenvectors [v1|v2]
 
@@ -239,7 +243,7 @@ class Ode(object):
         Returns
         -------
         norm : float
-            L2 norm of x, y.
+            DESCRIPTION. L2 norm of x, y.
 
         """
         norm = np.abs(x['x']-y['x'])**2+np.abs(x['y']-y['y'])**2
@@ -263,7 +267,22 @@ class Ode(object):
         point_dict = self._point_dict_setter(x,y)
         return self.ode.Rhs(0, point_dict)
 
-    def _euler_iter(self, point_dict, h=1e-6): ##
+    def _euler_iter(self, point_dict, h=1e-6):
+        """
+        Computes the next Euler iterate
+
+        Parameters
+        ----------
+        point_dict : Point dictionary 
+            DESCRIPTION. x_n
+        h : float, optional
+            DESCRIPTION. The default is 1e-6.
+
+        Returns
+        -------
+        x_n+1 : Point dictionary
+
+        """
         
         (x,y) = self._point_dict_getter(point_dict)
         
@@ -272,6 +291,24 @@ class Ode(object):
         return self._point_dict_setter(x+float(h)*x_dot, y+float(h)*y_dot)
         
     def unstable_manifold(self, direction):
+        """
+        Computes the branch of the unstable manifold in the specified direction
+        Computed until the distance to the non-starting saddle increases.
+
+        Parameters
+        ----------
+        direction : +/- 1
+            DESCRIPTION. +1 corresponds to unstable branch of saddle. -1 corresponds to 
+            stable branch.
+
+        Returns
+        -------
+        P :  List of Point dictionaries
+            DESCRIPTION. Point dictionaries forming the manifold
+        x1 : TYPE
+            DESCRIPTION. The saddle which the manifold is approaching
+
+        """
         
         saddle = self.get_saddle_point()
         if direction == 1:
@@ -291,6 +328,15 @@ class Ode(object):
         return P, x1
 
     def plot(self, dict_list):
+        """
+        Implementing matplotlib.pyplot.plot but passing an array of
+        point dictionaries instead of an array of floats.
+
+        Parameters
+        ----------
+        dict_list : Point dictionary
+
+        """
         x_plt = [] 
         y_plt = []
         for i in range(len(dict_list)):
@@ -302,8 +348,32 @@ class Ode(object):
         plt.show()
         
     def homoclinic_dist(self, direction):
+        """
+        Computes the Pontryagin energy for a given direction
+
+        Parameters
+        ----------
+        direction : +/- 1 
+            DESCRIPTION. +1 corresponds to unstable branch of saddle. -1 corresponds to 
+            stable branch.
+
+        Returns
+        -------
+        Pontryagin Energy : float
+            DESCRIPTION. PE+/-
+
+        """
         P, x = self.unstable_manifold(direction)
         return self._dist(P[-1], x)
 
     def pontryagin_energy(self):
+        """
+        Computes the tuple (PE+, PE-)
+
+        Returns
+        -------
+        PE : tuple
+            DESCRIPTION. (PE+, PE-)
+
+        """
         return (self.homoclinic_dist(1), self.homoclinic_dist(-1))
