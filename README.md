@@ -16,4 +16,7 @@ The N point can be computed directly by using a multivariate Newton Raphson meth
 
 
 ## TODO
-
+- Compute curves of chc (contractible homoclinic connection)
+- cpo (contractible periodic orbits) detection
+- Stability of curves of centre to detect degenerate Hopf points
+- csnp (contractible saddle nodes on periodic orbits) curves
