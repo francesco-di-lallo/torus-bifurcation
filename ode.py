@@ -33,6 +33,7 @@ class Ode(object):
         if len(self.fixed_points) != 2:
             print("Not in resonance region")
             self.in_resonance_region = False
+            
     
     def _point_dict_setter(self,x,y):
         """
@@ -121,7 +122,7 @@ class Ode(object):
                     if tr_jac > 0:
                         fp_type = "hyperbolic repeller"
         else:
-            fp_type = "non-hyperbolic"
+            fp_type = "centre"
     
         if fp_type != "non-hyperbolic":
             return (fp_type, eigen_vectors)
@@ -168,6 +169,14 @@ class Ode(object):
                         self.saddle_point = (fp, self.fp_eigen(fp)[1][0],\
                                              self.fp_eigen(fp)[1][1])
                         return self.saddle_point
+    def get_centre(self):
+        if self.in_resonance_region:
+            for fp in self.fixed_points:
+                if self.fp_eigen(fp)[0] in ['hyperbolic attractor',\
+                                            'hyperbolic repeller', 'centre']:
+                        self.centre_point = (fp, self.fp_eigen(fp)[1][0],\
+                                             self.fp_eigen(fp)[1][1])
+                        return self.centre_point
    
     def _initialise_unstable_manifold(self,direction, perturbation = 1e-7):
         """
@@ -269,7 +278,7 @@ class Ode(object):
 
     def _euler_iter(self, point_dict, h=1e-6):
         """
-        Computes the next Euler iterate
+        Computes the next Euler-Heun iterate
 
         Parameters
         ----------
@@ -288,7 +297,14 @@ class Ode(object):
         
         (x_dot, y_dot) = self.evaluate(x,y)
         
-        return self._point_dict_setter(x+float(h)*x_dot, y+float(h)*y_dot)
+        (x_tilde, y_tilde) = (x+float(h)*x_dot, y+float(h)*y_dot)
+        
+        (x_tilde_dot, y_tilde_dot) = self.evaluate(x_tilde,y_tilde)
+        
+        (x_next, y_next) = (x+float(h/2)*(x_dot+x_tilde_dot),
+                            y+float(h/2)*(y_dot+y_tilde_dot))
+        
+        return self._point_dict_setter(x_next, y_next)
         
     def unstable_manifold(self, direction):
         """
@@ -326,7 +342,18 @@ class Ode(object):
             i += 1
         
         return P, x1
-
+    
+    def extended_unstable_manifold(self, direction):
+        P, x1 = self.unstable_manifold(direction)
+        
+        x0 = P[0]
+        i = 0
+        while (self._dist(P[-1],x0) < self._dist(P[-2],x0)) or i < 500:
+            P.append(self._euler_iter(P[-1], h=1e-3))
+            i += 1
+        return P, x0
+        
+        
     def plot(self, dict_list):
         """
         Implementing matplotlib.pyplot.plot but passing an array of
@@ -347,7 +374,7 @@ class Ode(object):
         plt.plot(x_plt,y_plt)
         plt.show()
         
-    def homoclinic_dist(self, direction):
+    def homoclinic_dist(self, direction, t):
         """
         Computes the Pontryagin energy for a given direction
 
@@ -363,12 +390,20 @@ class Ode(object):
             DESCRIPTION. PE+/-
 
         """
-        P, x = self.unstable_manifold(direction)
-        return self._dist(P[-1], x)
-
-    def pontryagin_energy(self):
+        if t == 'rotational':
+            P, x = self.unstable_manifold(direction)
+            return self._dist(P[-1], x)
+        elif t == 'contractible':
+            P, x = self.extended_unstable_manifold(direction)
+            return self._dist(P[-1], x)
+    
+    def pontryagin_energy(self, t):
         """
         Computes the tuple (PE+, PE-)
+        
+        Parameters
+        ----------
+        t : 'rotational' or 'contractible'
 
         Returns
         -------
@@ -376,4 +411,7 @@ class Ode(object):
             DESCRIPTION. (PE+, PE-)
 
         """
-        return (self.homoclinic_dist(1), self.homoclinic_dist(-1))
+        return (self.homoclinic_dist(1, t), 
+                self.homoclinic_dist(-1, t))
+    
+        

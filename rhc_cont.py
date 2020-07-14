@@ -76,13 +76,13 @@ class RhcCont(object):
         bmk = Bmk({'ox':ox, 'oy':oy})
         ode = Ode(bmk.ode)
         
-        PE = ode.homoclinic_dist(direction)
+        PE = ode.homoclinic_dist(direction, 'rotational')
         
         
         bmk_incr = Bmk({'ox':ox, 'oy':oy+step})
         ode_incr = Ode(bmk_incr.ode)
         
-        PE_incr = ode_incr.homoclinic_dist(direction)
+        PE_incr = ode_incr.homoclinic_dist(direction, 'rotational')
         return PE/((PE_incr-PE)/step)
     
     def seed(self, direction):
@@ -122,22 +122,22 @@ class RhcCont(object):
             DESCRIPTION. oy values of RHC curve
 
         """
-        """
+        
         if direction == 1:
-            rhc_oy = pickle.load(open('rhc_oy_05.p', 'rb'))
-            rhc_ox = pickle.load(open('rhc_ox_05.p', 'rb'))
+            rhc_oy = pickle.load(open('rhc_oy_heun.p', 'rb'))
+            rhc_ox = pickle.load(open('rhc_ox_heun.p', 'rb'))
         else:
-            rhc_oy = pickle.load(open('rhc_oy_lift_05.p', 'rb'))
-            rhc_ox = pickle.load(open('rhc_ox_lift_05.p', 'rb'))
+            rhc_oy = pickle.load(open('rhc_oy_lift_heun.p', 'rb'))
+            rhc_ox = pickle.load(open('rhc_ox_lift_heun.p', 'rb'))
         """
         print('Initialising Seed')
         rhc_ox = [0]
         rhc_oy = [self.seed(direction)]
-        
-        ox_step = 0.01
+        """
+        ox_step = 0.0001
         print("Propagating RHC Forwards")
-        for i in range(50):
-            print("{0}% Iterating {1} Forwards".format(i/4., direction))
+        for i in range(0):
+            print("{0}% Iterating {1} Forwards".format(100*i/20, direction))
             ox_seed = rhc_ox[-1]+ox_step
             oy_seed = rhc_oy[-1]
             try:
@@ -145,17 +145,17 @@ class RhcCont(object):
                 rhc_ox.append(ox_seed)
             except:
                 print("done goofed")
-            """
+            
             if direction == 1:
-                pickle.dump(rhc_ox, open('rhc_ox_05.p', 'wb'))
-                pickle.dump(rhc_oy, open('rhc_oy_05.p', 'wb'))
+                pickle.dump(rhc_ox, open('rhc_ox_heun.p', 'wb'))
+                pickle.dump(rhc_oy, open('rhc_oy_heun.p', 'wb'))
             else:
-                pickle.dump(rhc_ox, open('rhc_ox_lift_05.p', 'wb'))
-                pickle.dump(rhc_oy, open('rhc_oy_lift_05.p', 'wb')) 
-            """    
+                pickle.dump(rhc_ox, open('rhc_ox_lift_heun.p', 'wb'))
+                pickle.dump(rhc_oy, open('rhc_oy_lift_heun.p', 'wb')) 
+              
         print("Propagating RHC Backwards")        
         for i in range(50):
-            print("{0}% Iterating {1} Backwards".format(i/4., direction))
+            print("{0}% Iterating {1} Backwards".format(100*i/10., direction))
             ox_seed = rhc_ox[0]-ox_step
             oy_seed = rhc_oy[0]
             try:
@@ -163,12 +163,17 @@ class RhcCont(object):
                 rhc_ox.insert(0, ox_seed)
             except:
                 print("done goofed")
-            """
+            
             if direction == 1:
-                pickle.dump(rhc_ox, open('rhc_ox_05.p', 'wb'))
-                pickle.dump(rhc_oy, open('rhc_oy_05.p', 'wb'))
+                pickle.dump(rhc_ox, open('rhc_ox_heun.p', 'wb'))
+                pickle.dump(rhc_oy, open('rhc_oy_heun.p', 'wb'))
             else:
-                pickle.dump(rhc_ox, open('rhc_ox_lift_05.p', 'wb'))
-                pickle.dump(rhc_oy, open('rhc_oy_lift_05.p', 'wb')) 
-            """
+                pickle.dump(rhc_ox, open('rhc_ox_lift_heun.p', 'wb'))
+                pickle.dump(rhc_oy, open('rhc_oy_lift_heun.p', 'wb')) 
+            
         return rhc_ox, rhc_oy
+
+
+RHC = RhcCont()
+#RHC.propagate(1)
+RHC.propagate(-1)

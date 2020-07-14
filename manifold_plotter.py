@@ -26,8 +26,7 @@ def para_plot(xs,ys,break_threshold):
 
     return np.array(xs_), np.array(ys_)
 
-
-bmk = Bmk({'ox': -0.009649961793522382, 'oy': 0.9270432434144844})
+bmk = Bmk({'ox': -0.16, 'oy': 1})
 ode = Ode(bmk.ode)
 
 P1, _ = ode.unstable_manifold(1)
@@ -80,6 +79,6 @@ plt.plot(x_plt_lift, y_plt_lift)
 plt.scatter(*zip(*fp_list),c='k', marker = 's',zorder=3)
 plt.xlim((0,1))
 plt.ylim((0,1))
-plt.title('ox: {}, oy: {}'.format(-0.009649961793522382, 0.9270432434144844))
+plt.title('ox: {}, oy: {}'.format(0, 1))
 plt.savefig('Necklace Point.png', dpi = 2000)
 plt.show()
